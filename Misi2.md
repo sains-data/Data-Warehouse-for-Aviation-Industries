@@ -1,19 +1,16 @@
-> **Analisis** **Kebutuhan** **Bisnis** **dan** **Teknis** **Data**
-> **Warehouse** **di**
->
-> **Industri** **Penerbangan**
+**Analisis** **Kebutuhan** **Bisnis** **dan** **Teknis** **Data** **Warehouse** **di** **Industri** **Penerbangan**
 >
 > **Kelompok** **19**
 >
 > **Anggota**:
 >
-> Jeremia Susanto Feryadi Yulius Dede Masita Nisrina Nur Afifah
->
-> Dwi sulistiani
+1. Jeremia Susanto (122450022)
+2. Feryadi Yulius (122450087)
+3. Dede Masita (121450007)
+4. Nisrina Nur Afifah (122450052)
+5. Dwi sulistiani (121450079)
 
-122450022 122450087 121450007 122450052
 
-121450079
 
 **1.** **Ringkasan** **Kebutuhan** **dari** **Misi**
 
