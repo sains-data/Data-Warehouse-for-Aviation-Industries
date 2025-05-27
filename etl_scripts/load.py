@@ -1,29 +1,48 @@
-# etl_scripts/python/load.py
+# etl_scripts/load.py
 
-import pyodbc
-import pandas as pd # Hanya untuk membuat DataFrame sampel jika __main__ dijalankan
+import sqlite3
+import pandas as pd
+import os
 
-# Konfigurasi Koneksi Database
-# Ganti dengan detail koneksi SQL Server Anda
-db_config = {
-    'driver': '{SQL Server Native Client 11.0}', # Sesuaikan driver jika perlu
-    'server': 'NAMA_SERVER_ANDA',
-    'database': 'NAMA_DATABASE_ANDA',
-    'username': 'USER_SQL_ANDA',
-    'password': 'PASSWORD_SQL_ANDA'
-    # atau 'trusted_connection': 'yes'
-}
+# Konfigurasi Database SQLite untuk demonstrasi
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, 'aviation_warehouse.db')
 
-# Membuat string koneksi
-if 'trusted_connection' in db_config:
-    conn_str = f"DRIVER={db_config['driver']};SERVER={db_config['server']};DATABASE={db_config['database']};TRUSTED_CONNECTION={db_config['trusted_connection']}"
-else:
-    conn_str = f"DRIVER={db_config['driver']};SERVER={db_config['server']};DATABASE={db_config['database']};UID={db_config['username']};PWD={db_config['password']}"
-
+def init_database():
+    """
+    Inisialisasi database dan tabel jika belum ada.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    # Baca file SQL dan eksekusi
+    sql_file_path = os.path.join(BASE_DIR, 'sql', '01_create_tables.sql')
+    
+    if os.path.exists(sql_file_path):
+        with open(sql_file_path, 'r', encoding='utf-8') as f:
+            sql_content = f.read()
+            # SQLite adaptation - remove TEXT type for compatibility
+            sql_content = sql_content.replace('TEXT', 'VARCHAR(500)')
+            sql_content = sql_content.replace('BIGINT', 'INTEGER')
+            
+            # Split and execute each CREATE TABLE statement
+            statements = sql_content.split(';')
+            for statement in statements:
+                if statement.strip():
+                    try:
+                        cursor.execute(statement)
+                    except sqlite3.Error as e:
+                        if "already exists" not in str(e):
+                            print(f"Error creating table: {e}")
+                            print(f"Statement: {statement[:100]}...")
+    
+    conn.commit()
+    conn.close()
+    print(f"Database initialized at: {DB_PATH}")
 
 def load_data_to_dwh(df_transformed, target_table='Fakta_Penerbangan'):
     """
-    Memuat DataFrame yang sudah ditransformasi ke tabel target di SQL Server.
+    Memuat DataFrame yang sudah ditransformasi ke tabel target di SQLite.
 
     Args:
         df_transformed (pandas.DataFrame): DataFrame yang siap dimuat.
@@ -36,46 +55,34 @@ def load_data_to_dwh(df_transformed, target_table='Fakta_Penerbangan'):
         print("DataFrame input kosong, tidak ada data yang dimuat.")
         return False
 
-    cnxn = None
     try:
-        cnxn = pyodbc.connect(conn_str)
-        cursor = cnxn.cursor()
+        # Inisialisasi database terlebih dahulu
+        init_database()
+        
+        conn = sqlite3.connect(DB_PATH)
         print(f"Berhasil terhubung ke database untuk memuat data ke tabel {target_table}.")
 
-        # Membuat query INSERT berdasarkan kolom DataFrame
-        # Pastikan urutan kolom di DataFrame sesuai dengan urutan parameter di query
-        cols = df_transformed.columns.tolist()
-        placeholders = ', '.join(['?'] * len(cols)) # ?, ?, ?, ...
-        sql_insert_query = f"INSERT INTO {target_table} ({', '.join(cols)}) VALUES ({placeholders})"
+        # Menggunakan pandas to_sql untuk kemudahan
+        df_transformed.to_sql(target_table, conn, if_exists='append', index=False)
         
-        print(f"Query INSERT yang akan digunakan: {sql_insert_query}")
-        print(f"Kolom yang akan dimasukkan: {cols}")
-
-        # Konversi DataFrame ke list of tuples untuk dimasukkan
-        data_to_insert = [tuple(row) for row in df_transformed.to_numpy()]
-
-        # Menggunakan executemany untuk performa yang lebih baik pada multiple inserts
-        cursor.fast_executemany = True # Coba aktifkan untuk pyodbc, bisa meningkatkan performa
-        cursor.executemany(sql_insert_query, data_to_insert)
+        conn.commit()
+        print(f"Berhasil memuat {len(df_transformed)} baris ke tabel {target_table}.")
         
-        cnxn.commit()
-        print(f"Berhasil memuat {len(data_to_insert)} baris ke tabel {target_table}.")
+        # Verifikasi data yang dimuat
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT COUNT(*) FROM {target_table}")
+        total_rows = cursor.fetchone()[0]
+        print(f"Total baris sekarang di tabel {target_table}: {total_rows}")
+        
+        conn.close()
         return True
 
-    except pyodbc.Error as db_err:
-        print(f"Error koneksi atau eksekusi database saat memuat data: {db_err}")
-        if cnxn:
-            cnxn.rollback()
+    except sqlite3.Error as db_err:
+        print(f"Error database saat memuat data: {db_err}")
         return False
     except Exception as e:
         print(f"Terjadi error yang tidak terduga saat memuat data: {e}")
-        if cnxn:
-            cnxn.rollback()
         return False
-    finally:
-        if cnxn:
-            cnxn.close()
-            print("Koneksi database ditutup setelah proses pemuatan.")
 
 if __name__ == '__main__':
     # Contoh penggunaan fungsi load
@@ -90,30 +97,21 @@ if __name__ == '__main__':
         'ID_KelasLayanan': [1, 1, 2],
         'ID_StatusPenerbangan': [1, 2, 1],
         'Jumlah_Penumpang': [150, 175, 160],
-        'Pendapatan': [15000000.0, 17500000.0, 32000000.0],
+        'Pendapatan': [15000000, 17500000, 32000000],
         'Jumlah_Penerbangan': [1, 1, 1],
-        'Biaya_Operasional': [10000000.0, 12000000.0, 0.0], # NaN sudah diisi 0.0
-        'Waktu_Keberangkatan_Aktual': [pd.Timestamp('2024-01-01 08:00:00'), pd.Timestamp('2024-01-01 10:00:00'), pd.Timestamp('2024-01-02 14:00:00')],
-        'Waktu_Kedatangan_Aktual': [pd.Timestamp('2024-01-01 09:00:00'), pd.Timestamp('2024-01-01 11:30:00'), pd.Timestamp('2024-01-02 15:00:00')],
-        'Keterlambatan_Menit': [0, 30, 0] # 'N/A' sudah diisi 0
     }
     df_sample_transformed = pd.DataFrame(sample_transformed_data)
-
-    # Pastikan urutan kolom di DataFrame ini sama dengan yang diharapkan oleh tabel Fakta_Penerbangan
-    # dan query INSERT yang digenerate secara dinamis.
-    # Ini penting jika Anda tidak secara eksplisit menyebutkan nama kolom di VALUES (?,?,?)
-    # Dengan membuat query INSERT dinamis ({', '.join(cols)}), urutan dari df_transformed.columns akan digunakan.
 
     print("DataFrame Sampel Siap Dimuat:")
     print(df_sample_transformed)
     df_sample_transformed.info()
 
-    # PENTING: Sebelum menjalankan ini, pastikan tabel Fakta_Penerbangan Anda sudah siap
-    # dan tabel dimensi sudah terisi agar FK tidak error.
-    # Juga, pastikan tidak ada data dengan ID_FaktaPenerbangan yang sama jika kolom itu adalah PRIMARY KEY.
-    # success = load_data_to_dwh(df_sample_transformed)
-    # if success:
-    #     print("Contoh pemuatan data selesai dengan sukses.")
-    # else:
-    #     print("Contoh pemuatan data gagal.")
-    print("\nKomentari bagian pemanggilan load_data_to_dwh di __main__ jika hanya ingin melihat struktur file.")
+    # Test database initialization
+    init_database()
+    
+    print("\nMenjalankan contoh pemuatan data...")
+    success = load_data_to_dwh(df_sample_transformed)
+    if success:
+        print("Contoh pemuatan data selesai dengan sukses.")
+    else:
+        print("Contoh pemuatan data gagal.")

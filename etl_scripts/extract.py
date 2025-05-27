@@ -5,15 +5,15 @@ import os
 # Ganti dengan path lengkap dan benar ke file CSV Anda
 # Sebaiknya gunakan path absolut atau path relatif yang dikelola dengan baik
 # Misalnya, jika dataset ada di ../../data/source/
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # <project_root_dir>
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # <project_root_dir>
 # Ganti 'nama_file_dataset_anda.csv' dengan nama file CSV yang benar
 # Ini mengasumsikan file CSV Anda ada di <project_root_dir>/data/source/
-# CSV_FILE_PATH = os.path.join(BASE_DIR, 'data', 'source', 'fakta_penerbangan.csv')
+CSV_FILE_PATH = os.path.join(BASE_DIR, 'data', 'source', 'fakta_penerbangan.csv')
 
 # Untuk contoh ini, kita akan gunakan path yang Anda sebutkan sebelumnya,
 # tapi Anda perlu memastikan path ini valid saat skrip dijalankan.
 # Menggunakan path absolut lebih aman jika struktur folder kompleks.
-CSV_FILE_PATH = r'D:\data sains-data\Kelompok-19-DW-RC\dataset\fakta_penerbangan.csv' # GANTI DENGAN PATH ANDA!
+# CSV_FILE_PATH = r'D:\data sains-data\Kelompok-19-DW-RC\dataset\fakta_penerbangan.csv' # GANTI DENGAN PATH ANDA!
 # atau jika file CSV ada di folder yang sama dengan skrip Python:
 # CSV_FILE_PATH = 'fakta_penerbangan.csv'
 

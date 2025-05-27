@@ -1,0 +1,37 @@
+
+📊 AVIATION DATA WAREHOUSE - VISUALIZATION REPORT
+================================================
+
+📈 KEY PERFORMANCE INDICATORS:
+   • Total Flights: 1,000
+   • Total Passengers: 113,156
+   • Total Revenue: Rp 295.87 Billion
+   • Total Cost: Rp 30.49 Billion
+   • Net Profit: Rp 265.38 Billion
+   • Average Delay: 61.5 minutes
+
+⏱️ DELAY ANALYSIS:
+   • On Time (≤15 min): 359 flights (35.9%)
+   • Minor Delay (16-30 min): 53 flights
+   • Moderate Delay (31-60 min): 70 flights
+   • Major Delay (>60 min): 518 flights (51.8%)
+
+💰 FINANCIAL PERFORMANCE:
+   • Average Revenue per Flight: Rp 295.87 Million
+   • Average Cost per Flight: Rp 30.49 Million
+   • Profit Margin: 89.7%
+
+🎯 OPERATIONAL METRICS:
+   • Average Passengers per Flight: 113
+   • Load Factor: 62.9% (assuming 180-seat capacity)
+   • Revenue per Passenger: Rp 2615K
+
+📋 GENERATED VISUALIZATIONS:
+   1. 01_revenue_analysis.png - Revenue analysis by flight routes
+   2. 02_delay_analysis.png - Flight delay distribution analysis
+   3. 03_passenger_revenue_analysis.png - Passenger and revenue by class
+   4. 04_operational_overview.png - Operational metrics overview
+   5. 05_kpi_dashboard.png - Executive KPI dashboard
+
+📁 Files saved in: /workspaces/Data-Warehouse-for-Aviation-Industries/visualizations
+🕒 Report generated: 2025-05-27 15:02:34

@@ -1,8 +1,8 @@
 # main_etl.py (Contoh skrip utama)
 
-from etl_scripts.python.extract import extract_data_from_csv
-from etl_scripts.python.transform import transform_flight_data
-from etl_scripts.python.load import load_data_to_dwh
+from etl_scripts.extract import extract_data_from_csv
+from etl_scripts.transform import transform_flight_data
+from etl_scripts.load import load_data_to_dwh
 
 def run_etl_pipeline():
     print("Memulai pipeline ETL Penerbangan...")
